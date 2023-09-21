@@ -14,6 +14,9 @@ public class MemberController extends Controller {
 	private String actionMethodName;
 	private String command;
 
+	boolean isLogined = false;
+	Member loginedMember = null;
+
 	int lastMemberId = 3;
 
 	public MemberController(Scanner sc) {
@@ -29,13 +32,75 @@ public class MemberController extends Controller {
 		case "join":
 			doJoin();
 			break;
+		case "login":
+			doLogin();
+			break;
+		case "logout":
+			doLogout();
+			break;
+		case "whoami":
+			showWhoAmI();
+			break;
 		default:
 			System.out.println("그런 세부기능은 없어");
 			break;
 		}
 	}
 
+	private void showWhoAmI() {
+		if (isLogined() == false) {
+			System.out.println("현재 로그아웃 상태야");
+			return;
+		}
+		System.out.println("== 현재 로그인 한 회원의 정보==");
+		System.out.println("가입일 : " + loginedMember.regDate);
+		System.out.println("로그인 아이디 : " + loginedMember.loginId);
+		System.out.println("이름 : " + loginedMember.name);
+	}
+
+	private void doLogout() {
+		if (isLogined() == false) {
+			System.out.println("현재 로그아웃 상태야");
+			return;
+		}
+		isLogined = false;
+		loginedMember = null;
+
+		System.out.println("로그아웃 함");
+	}
+
+	private void doLogin() {
+		if (isLogined()) {
+			System.out.println("이미 누가 로그인 했다");
+			return;
+		}
+		System.out.printf("로그인 아이디 : ");
+		String loginId = sc.nextLine();
+		System.out.printf("로그인 비밀번호 : ");
+		String loginPw = sc.nextLine();
+
+		Member member = getMemberByLoginId(loginId);
+
+		if (member == null) {
+			System.out.println("너같은 회원은 없어");
+			return;
+		}
+		if (member.loginPw.equals(loginPw) == false) {
+			System.out.println("너 비번 틀림");
+			return;
+		}
+
+		isLogined = true;
+		loginedMember = member;
+
+		System.out.println("로그인 성공!");
+	}
+
 	public void doJoin() {
+		if (isLogined()) {
+			System.out.println("이미 누가 로그인 했다");
+			return;
+		}
 		int id = lastMemberId + 1;
 		String regDate = Util.getNow();
 		String loginId = null;
@@ -99,7 +164,21 @@ public class MemberController extends Controller {
 
 		System.out.printf("%d번 회원이 가입되었습니다.\n", id);
 		lastMemberId++;
-		
+
+	}
+
+	public boolean isLogined() {
+		return loginedMember != null;
+	}
+
+	private Member getMemberByLoginId(String loginId) {
+		int index = getMemberIndexByLoginId(loginId);
+
+		if (index == -1) {
+			return null;
+		}
+
+		return members.get(index);
 	}
 
 	private boolean isJoinableLoginId(String loginId) {
@@ -118,14 +197,16 @@ public class MemberController extends Controller {
 			if (member.loginId.equals(loginId)) {
 				return i;
 			}
+			i++;
 		}
 		return -1;
 	}
-	public void makeTestData_member() {
-		System.out.println("테스트를 위한 회원데이터 3개 생성 완료");
-		members.add(new Member(1,Util.getNow(),Util.getNow(),"123","123","이름 : 홍길동"));
-		members.add(new Member(2,Util.getNow(),Util.getNow(),"abc","abc","이름 : 홍길순"));
-		members.add(new Member(3,Util.getNow(),Util.getNow(),"bbc","bbc","이름 : 홍길윤"));
+
+	public void makeTestData() {
+		System.out.println("테스트를 위한 회원 데이터 3개 생성 완료");
+		members.add(new Member(1, Util.getNow(), Util.getNow(), "test1", "test1", "회원1"));
+		members.add(new Member(2, Util.getNow(), Util.getNow(), "test2", "test2", "회원2"));
+		members.add(new Member(3, Util.getNow(), Util.getNow(), "test3", "test3", "회원3"));
 	}
 
 }
